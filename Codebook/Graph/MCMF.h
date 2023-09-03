@@ -1,76 +1,70 @@
-template<class Cap_t, class Cost_t> struct MCMF {
-	struct Edge {
-		int from;
-		int to;
-		Cap_t cap;
-		Cost_t cost;
-		Edge(int u, int v, Cap_t _cap, Cost_t _cost) : from(u), to(v), cap(_cap), cost(_cost) {}
-	};
-	static constexpr Cap_t EPS = static_cast<Cap_t>(1e-9);
-	int n;
-	vector<Edge> edges;
-	vector<vector<int>> g;
-	vector<Cost_t> d;
-	vector<bool> in_queue;
-	vector<int> previous_edge;
-	MCMF(int _n) : n(_n), g(_n), d(_n), in_queue(_n), previous_edge(_n) {}
-	void add_edge(int u, int v, Cap_t cap, Cost_t cost) {
-		assert(0 <= u && u < n);
-		assert(0 <= v && v < n);
-		g[u].PB(SZ(edges));
-		edges.EB(u, v, cap, cost);
-		g[v].PB(SZ(edges));
-		edges.EB(v, u, 0, -cost);
+/**
+Minimum-cost maximum flow, assumes no negative cycles. 
+* It is possible to choose negative edge costs such that the first 
+* run of Dijkstra is slow, but this hasn't been an issue in the past. 
+* Edge weights $\ge 0$ for every subsequent run. To get flow through 
+* original edges, assign ID's during \texttt{ae}.
+* Time: Ignoring first run of Dijkstra, $O(FM\log M)$ 
+* if caps are integers and $F$ is max flow.
+ */
+
+struct MCMF {
+	// flow type, cost type
+	using F = ll; using C = ll; 
+	struct Edge { int to; F flo, cap; C cost; };
+	int N; V<C> p, dist; vi pre; 
+	V<Edge> eds; V<vi> adj;
+	void init(int _N) { N = _N;
+		p.rsz(N), dist.rsz(N), 
+		pre.rsz(N), adj.rsz(N);
 	}
-	bool bfs(int s, int t) {
-		bool found = false;
-		fill(d.begin(), d.end(), numeric_limits<Cost_t>::max());
-		d[s] = 0;
-		in_queue[s] = true;
-		queue<int> que;
-		que.push(s);
-		while(!que.empty()) {
-			int u = que.front(); que.pop();
-			if(u == t) found = true;
-			in_queue[u] = false;
-			for(auto& id : g[u]) {
-				const Edge& e = edges[id];
-				if(e.cap > EPS && d[u] + e.cost < d[e.to]) {
-					d[e.to] = d[u] + e.cost;
-					previous_edge[e.to] = id;
-					if(!in_queue[e.to]) {
-						que.push(e.to);
-						in_queue[e.to] = true;
-					}
-				}
+	void ae(int u, int v, F cap, C cost) { 
+		assert(cap >= 0);
+		adj[u].pb(sz(eds)); 
+		eds.pb({v,0,cap,cost});
+		adj[v].pb(sz(eds)); 
+		eds.pb({u,0,0,-cost});
+	} // use asserts, don't try smth dumb
+	bool path(int s, int t) { 
+		// find lowest cost path to send flow through
+		const C inf = numeric_limits<C>::max(); F0R(i,0,N) dist[i] = inf;
+		using T = pair<C,int>; priority_queue<T,vector<T>,greater<T>> todo;
+		todo.push({dist[s] = 0,s});
+		while (sz(todo)) { // Dijkstra
+			T x = todo.top(); todo.pop(); 
+			if (x.ff > dist[x.ss]) continue;
+			foreach(e,adj[x.ss]) { 
+				const Edge& E = eds[e]; 
+				// all weights should be non-negative
+				if (E.flo < E.cap && cmin(dist[E.to],x.ff+E.cost+p[x.ss]-p[E.to]))
+					pre[E.to] = e, 
+					todo.push({dist[E.to],E.to});
 			}
-		}
-		return found;
+		} // if costs are doubles, add some EPS so you
+		// don't traverse ~0-weight cycle repeatedly
+		return dist[t] != inf; // return flow
 	}
-	pair<Cap_t, Cost_t> flow(int s, int t) {
-		assert(0 <= s && s < n);
-		assert(0 <= t && t < n);
-		Cap_t cap = 0;
-		Cost_t cost = 0;
-		while(bfs(s, t)) {
-			Cap_t send = numeric_limits<Cap_t>::max();
-			int u = t;
-			while(u != s) {
-				const Edge& e = edges[previous_edge[u]];
-				send = min(send, e.cap);
-				u = e.from;
-			}
-			u = t;
-			while(u != s) {
-				Edge& e = edges[previous_edge[u]];
-				e.cap -= send;
-				Edge& b = edges[previous_edge[u] ^ 1];
-				b.cap += send;
-				u = e.from;
-			}
-			cap += send;
-			cost += send * d[t];
+	pair<F,C> calc(int s, int t) { assert(s != t);
+		F0R(_,0,N) F0R(e,0,sz(eds)) { 
+			const Edge& E = eds[e]; 
+			// Bellman-Ford
+			if (E.cap) cmin(p[E.to],p[eds[e^1].to]+E.cost); 
 		}
-		return make_pair(cap, cost);
+		F totFlow = 0; C totCost = 0;
+		while (path(s,t)) {
+			// p -> potentials for Dijkstra
+			F0R(i,0,N) p[i] += dist[i]; 
+			// don't matter for unreachable nodes
+			F df = numeric_limits<F>::max();
+			for (int x = t; x != s; x = eds[pre[x]^1].to) {
+				const Edge& E = eds[pre[x]]; cmin(df,E.cap-E.flo); 
+			}
+			totFlow += df; 
+			totCost += (p[t]-p[s])*df;
+			for (int x = t; x != s; x = eds[pre[x]^1].to)
+				eds[pre[x]].flo += df, 
+				eds[pre[x]^1].flo -= df;
+		} // get max flow you can send along path
+		return {totFlow,totCost};
 	}
 };

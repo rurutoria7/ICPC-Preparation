@@ -3,23 +3,35 @@
 using namespace std;
 using namespace __gnu_pbds;
 
-using ll = long long;
-using ld = long double;
-using pii = pair<int, int>;
-using pll = pair<ll, ll>;
-using vi = vector<int>;
-using vl = vector<ll>;
+typedef long long ll;
+typedef pair<int, int> pii;
+typedef vector<int> vi;
 
-#define SZ(a) ((int)a.size())
-#define ALL(v) (v).begin(), (v).end()
-#define RALL(v) (v).rbegin(), (v).rend()
-#define PB push_back
-#define PPB pop_back
-#define EB emplace_back
-#define F first
-#define S second
+#define V vector
+#define sz(a) ((int)a.size())
+#define all(v) (v).begin(), (v).end()
+#define rall(v) (v).rbegin(), (v).rend()
+#define pb push_back
+#define rsz resize
+#define mp make_pair
+#define mt make_tuple
+#define ff first
+#define ss second
 
-template<class T> inline bool chmin(T& a, const T& b) { if(a > b) { a = b; return true; } return false; }
-template<class T> inline bool chmax(T& a, const T& b) { if(a < b) { a = b; return true; } return false; }
+#define FOR(i,j,k) for (int i=(j); i<=(k); i++)
+#define F0R(i,j,k) for (int i=(j); i<(k); i++)
+#define REP(i) FOR(_,1,i)
+#define foreach(a,x) for (auto& a: x)
 
-const double EPS = 1e-9;
+
+template<class T> bool cmin(T& a, const T& b) {
+    return b < a ? a = b, 1 : 0; } // set a = min(a,b)
+template<class T> bool cmax(T& a, const T& b) {
+    return a < b ? a = b, 1 : 0; } // set a = max(a,b)
+
+ll cdiv(ll a, ll b) { return a/b+((a^b)>0&&a%b); }
+ll fdiv(ll a, ll b) { return a/b-((a^b)<0&&a%b); }
+
+#define roadroller ios::sync_with_stdio(0), cin.tie(0);
+#define de(x) cerr << #x << '=' << x << ", "
+#define dd cerr << '\n';

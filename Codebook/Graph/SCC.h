@@ -1,37 +1,27 @@
 struct SCC {
-	int n;
-	vector<vector<int>> g, h;
-	SCC() : SCC(0) {}
-	SCC(int _n) : n(_n), g(_n), h(_n) {}
-	void add_edge(int u, int v) {
-		assert(0 <= u && u < n);
-		assert(0 <= v && v < n);
-		g[u].PB(v); h[v].PB(u);
+	int N, sccSz; V<vi> adj, radj;
+	vi todo, comp; V<bool> vis;
+	void init(int _N) { // vertex: [0,N)
+		N = _N, adj.rsz(N), radj.rsz(N), 
+		comp = vi(N,-1), vis.rsz(N), sccid = 0;
 	}
-	vector<int> solve() {
-		vector<int> id(n), top;
-		top.reserve(n);
-		function<void(int)> dfs1 = [&](int u) {
-			id[u] = 1;
-			for(auto v : g[u]) {
-				if(id[v] == 0) dfs1(v);
-			}
-			top.PB(u);
-		};
-		for(int i = 0; i < n; ++i) {
-			if(id[i] == 0) dfs1(i);
-		}
-		fill(id.begin(), id.end(), -1);
-		function<void(int, int)> dfs2 = [&](int u, int x) {
-			id[u] = x;
-			for(auto v : h[u]) {
-				if(id[v] == -1) dfs2(v);
-			}
-		};
-		for(int i = n - 1, cnt = 0; i >= 0; --i) {
-			int u = top[i];
-			if(id[u] == -1) dfs2(u, cnt++);
-		}
-		return id;
+	void ae(int x, int y) { 
+		adj[x].pb(y), radj[y].pb(x); 
+	}
+	void dfs(int x) {
+		vis[x] = 1; 
+		for (auto y: adj[x]) if (!vis[y]) dfs(y);
+		todo.pb(x);
+	}
+	void dfs2(int x, int v) {
+		comp[x] = v; 
+		for (auto y: radj[x]) if (comp[y] == -1) dfs2(y,v);
+	}
+	// assign all vertex a sccid, start from 0, 
+	void gen() { 
+		F0R(i,0,N) if (!vis[i]) dfs(i);
+		reverse(all(todo)); 
+		for (auto x: todo) if (comp[x] == -1)
+			dfs2(x,sccSz++);
 	}
 };

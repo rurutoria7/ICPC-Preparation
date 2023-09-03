@@ -49,14 +49,14 @@ if __name__ == '__main__':
 					add(f'\\subsection{{{file[: pos]}}}')
 				else:
 					add(f'\\subsection{{{file}}}')
-				if fmt == 'h':
+				if fmt == 'h' or fmt != 'tex':
 					add('\\begin{code}')
 				with open(os.path.join(current_dir, file)) as r:
 					for s in r.readlines():
 						if len(s.strip()) > 0:
 							add(s.replace('\t', '    '), False)
 					# add(''.join([word.replace('\t', '    ') for word in r.readlines()]), False)
-				if fmt == 'h':
+				if fmt == 'h' or fmt != 'tex':
 					add('\\end{code}')
 				print('[File]', file, 'included')
 
